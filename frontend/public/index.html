@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-time Table</title>
+  <style>
+      table {
+          border-collapse: collapse;
+          width: 100%;
+      }
+      th, td {
+          border: 1px solid black;
+          padding: 8px;
+          text-align: center;
+        body {
+            background-color: antiquewhite;
+        }
+      }
+  </style>
+</head>
+<body>
+  <h1>Real-time Table</h1>
+  <table id="dataTable">
+      <thead>
+          <tr>
+              <th>Date&Time</th>
+              <th>รถเข้า</th>
+              <th>รถออก</th>
+          </tr>
+      </thead>
+      <tbody id="tableBody">
+        <script src="/socket.io/socket.io.js"></script>
+
+        <script>
+          const socket = io();
+          
+          // เมื่อได้รับข้อมูลใหม่จากเซิร์ฟเวอร์
+          socket.on('data', (data) => {
+              const tableBody = document.getElementById('tableBody');
+              tableBody.innerHTML = '';
+              data.data1.forEach((item) => {
+                  const tr = document.createElement('tr');
+                  tr.innerHTML = `
+                      <td>${item.time_interval}</td>
+                      <td>${item.carin}</td>
+                      <td>${item.carout}</td>
+                  `;
+                  tableBody.appendChild(tr);
+
+              });
+          });
+        </script>
+      </tbody>
+  </table>
+</body>
+</html>tml lang="en">
+<h
