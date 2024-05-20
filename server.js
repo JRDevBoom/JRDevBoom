@@ -10,8 +10,8 @@ const { sendData } = require('./Data/database');
 const { notifyConnect, notifyDisconnect } = require('./Notify/linenotify');
 const log4js = require('log4js');
 const logger = log4js.getLogger(); // นำเข้า logger จาก log4js
-const { startModule } = require('./httpreq'); // ปรับเส้นทางไปยังไฟล์ที่บันทึกโมดูล
 
+const { getRequestToArduino } = require('./RouterJeab/httpreq');
 
 
 const app = express();
@@ -19,7 +19,6 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 
-startModule();
 
 // Function to handle Socket.IO connection
 const handleSocketConnection = async (socket) => {
@@ -33,9 +32,7 @@ const handleSocketConnection = async (socket) => {
 };
 
 // Middleware
-app.use(cors()); // เพิ่ม middleware สำหรับ CORS
-app.use(bodyParser.json());
-app.use('/', router);
+setInterval (getRequestToArduino, 10000);
 
 // Socket.IO connection
 io.on('connection', handleSocketConnection);
