@@ -31,14 +31,14 @@
       border: 1px solid #ccc;
     }
     th {
-      background-color: #ff8c00; /* เปลี่ยนสี background เป็นสีส้มอบอุ่น */
+      background-color: #ff9f43;
       color: #fff;
     }
     tr:nth-child(even) {
-      background-color: #ffb366; /* เปลี่ยนสี background สำหรับแถวคู่เป็นโทนสีส้ม */
+      background-color: #ffeaa7;
     }
     tr:hover {
-      background-color: #ff9900; /* เปลี่ยนสี background เมื่อ hover เป็นโทนสีส้มเข้ม */
+      background-color: #fdcb6e;
     }
   </style>
 </head>
@@ -56,11 +56,12 @@
       </tbody>
   </table>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
-    // เรียกใช้งาน REST API เพื่อรับข้อมูล
-    fetch('/api/data')
-      .then(response => response.json())
-      .then(data => {
+    const socket = io();
+    
+    // เมื่อได้รับข้อมูลใหม่จากเซิร์ฟเวอร์
+    socket.on('data', (data) => {
         const tableBody = document.getElementById('tableBody');
         tableBody.innerHTML = '';
         const totalCar = data.totalcar; // เก็บค่า totalcar ไว้ก่อน
@@ -82,10 +83,7 @@
             `;
             tableBody.appendChild(tr);
         });
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
+    });
   </script>
 </body>
 </html>

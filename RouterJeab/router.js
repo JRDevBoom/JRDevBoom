@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { processData } = require('../Data/database');
-const { getRequestToArduino } = require('../httpreq');
 
 router.post('/data', async (req, res) => {
   try {

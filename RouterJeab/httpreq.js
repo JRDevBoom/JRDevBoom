@@ -1,4 +1,6 @@
 const http = require('http');
+const express = require('express');
+const app = express();
 const { processData } = require('../Data/database');
 
 // กำหนด IP address และ port ของ Arduino
@@ -30,12 +32,13 @@ function getRequestToArduino() {
       res.on('end', () => {
         try {
           const jsonData = JSON.parse(data);
-          const { carin, carout } = jsonData; // สมมติว่า JSON ที่ได้มีคีย์ carin และ carout
+          const { carin, carout } = jsonData; // สมมติว่า JSON ที่ได้มีคีย์ carin และ carou
           if (carin === 0 && carout === 0) {
             return;
           }
           processData(carin, carout);
           console.log('Data received:', { carin, carout });
+          module.exports =  { carin };
       } catch (error) {
           console.error('Error parsing JSON:', error);
       }
@@ -48,7 +51,5 @@ function getRequestToArduino() {
 
     req.end();
   }
-
-setInterval (getRequestToArduino, 1000);
 
 module.exports = { getRequestToArduino };

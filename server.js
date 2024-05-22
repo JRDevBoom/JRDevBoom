@@ -6,10 +6,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors'); // เพิ่ม middleware สำหรับ CORS
 const { Server } = require('socket.io');
 const router = require('./RouterJeab/router');
-const { sendData } = require('./Data/database');
+const { sendData, sendData2 } = require('./Data/database');
 const { notifyConnect, notifyDisconnect } = require('./Notify/linenotify');
-const log4js = require('log4js');
-const logger = log4js.getLogger(); // นำเข้า logger จาก log4js
 
 const { getRequestToArduino } = require('./RouterJeab/httpreq');
 
@@ -32,19 +30,32 @@ const handleSocketConnection = async (socket) => {
 };
 
 // Middleware
-setInterval (getRequestToArduino, 10000);
+setInterval (getRequestToArduino, 2000);
 
 // Socket.IO connection
 io.on('connection', handleSocketConnection);
 
 // เปลี่ยนเส้นทางไปยังไดเรกทอรีของ React ในเครื่องอื่น
-app.use(express.static(path.join(__dirname, 'frontend')));
 
 // React router
 app.get('/', (req, res) => {
   // Send the index.html file from the React build directory
   res.sendFile(path.join(__dirname,'frontend', 'public', 'index.html'));
 });
+
+
+app.get('/api/data', (req, res) => {
+  sendData()
+      .then((data) => {
+          res.json(data);
+      })
+      .catch((error) => {
+          console.error(error);
+          res.status(500).json({ error: 'Internal server error' });
+      });
+});
+
+
 // Start server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
@@ -93,3 +104,4 @@ arduinoServer.on('error', (error) => {
 arduinoServer.listen(arduinoPort, () => {
   console.log(`Arduino server is running on port ${arduinoPort}`);
 });
+

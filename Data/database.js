@@ -1,5 +1,3 @@
-const log4js = require('log4js');
-const logger = log4js.getLogger(); // นำเข้า logger จาก log4js
 
 const pgp = require("pg-promise")();
 const db = pgp('postgres://postgres:123456@localhost:5432/project_car');
@@ -14,31 +12,31 @@ function processData(carin, carout) {
       logger.error('Error processing data:', error);
     });
 }
-
-function sendData(io) {
+function sendData() {
+    return new Promise((resolve, reject) => {
     Promise.all([
         db.any(`
-        SELECT
-        series.time_interval,
-        COALESCE(SUM(p.carin), 0) AS carin,
-        COALESCE(SUM(p.carout), 0) AS carout
-    FROM
-        (
-            SELECT DISTINCT generate_series(
-                date_trunc('hour', MIN(p.time)),
-                date_trunc('hour', MAX(p.time)) + INTERVAL '1 hour',
-                '15 minutes'::interval
-            ) AS time_interval
-            FROM project AS p
-        ) AS series
-    LEFT JOIN
-        project AS p
-    ON
-        date_trunc('hour', p.time) + INTERVAL '15 min' * floor(date_part('minute', p.time) / 15) = series.time_interval
-    GROUP BY
-        series.time_interval
-    ORDER BY
-        series.time_interval DESC;
+            SELECT
+                series.time_interval,
+                COALESCE(SUM(p.carin), 0) AS carin,
+                COALESCE(SUM(p.carout), 0) AS carout
+            FROM
+                (
+                    SELECT DISTINCT generate_series(
+                        date_trunc('hour', MIN(p.time)),
+                        date_trunc('hour', MAX(p.time)) + INTERVAL '1 hour',
+                        '15 minutes'::interval
+                    ) AS time_interval
+                    FROM project AS p
+                ) AS series
+            LEFT JOIN
+                project AS p
+            ON
+                date_trunc('hour', p.time) + INTERVAL '15 min' * floor(date_part('minute', p.time) / 15) = series.time_interval
+            GROUP BY
+                series.time_interval
+            ORDER BY
+                series.time_interval DESC;
         `),
         db.one(`
             SELECT SUM(carin - carout) AS total
@@ -50,12 +48,14 @@ function sendData(io) {
             item.time_interval = moment.tz(item.time_interval, 'Asia/Bangkok').format('YYYY-MM-DD HH:mm:ss');
         });
         const totalRemainingCars = result.total;
-        io.sockets.emit('data', { data1, total: totalRemainingCars });
+        resolve({ data1, totalcar: totalRemainingCars }); // Resolve data
     })
     .catch((error) => {
-        // บันทึก error ด้วย logger แทนการ console.log
-        logger.error('Error sending data:', error);
+        reject(error); // Reject error
     });
 }
+)}
 
-module.exports = { processData, sendData };
+
+
+module.exports = { processData, sendData};
