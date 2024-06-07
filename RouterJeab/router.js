@@ -16,7 +16,7 @@ router.post('/data', async (req, res) => {
     return res.status(201).json();
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: "Failed to insert data into database" });
+    return res.status(500).json({ error: "Failed to insert data into database"});
   }
 });
 

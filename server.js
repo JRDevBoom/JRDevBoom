@@ -6,36 +6,25 @@ const bodyParser = require('body-parser');
 const cors = require('cors'); // เพิ่ม middleware สำหรับ CORS
 const { Server } = require('socket.io');
 const router = require('./RouterJeab/router');
-const { sendData, sendData2 } = require('./Data/database');
+const { sendDataAPI } = require('./Data/database');
+const { sendDataBAPI } = require('./Data/databaseB');
+const pgp = require("pg-promise")();
+const db = pgp('postgres://postgres:123456@localhost:5432/project_car');
+const moment = require('moment-timezone');
 const { notifyConnect, notifyDisconnect } = require('./Notify/linenotify');
 
-const { getRequestToArduino } = require('./RouterJeab/httpreq');
+const { getRequestToArduino} = require('./RouterJeab/httpreq');
 
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
-
-
-
-// Function to handle Socket.IO connection
-const handleSocketConnection = async (socket) => {
-  console.log('A user connected');
-  await sendData(io);
-  const interval = setInterval(() => sendData(io), 1000);
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-    clearInterval(interval);
-  });
-};
 
 // Middleware
-setInterval (getRequestToArduino, 2000);
+setInterval (getRequestToArduino, 1000);
 
-// Socket.IO connection
-io.on('connection', handleSocketConnection);
+//setInterval (getRequestToExprees, 1000);
 
-// เปลี่ยนเส้นทางไปยังไดเรกทอรีของ React ในเครื่องอื่น
+app.use(bodyParser.json());
 
 // React router
 app.get('/', (req, res) => {
@@ -43,9 +32,28 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname,'frontend', 'public', 'index.html'));
 });
 
+app.post('/dataB', (req, res) => {
+  const { carin, carout} = req.body; // เพิ่ม time ในการรับข้อมูล
+  if (carin === 0 && carout === 0) {
+    return res.status(200).json({ message: "Both values are zero. Data will not be stored." });
+  }
+  // แปลงเวลาจากข้อความให้เป็นวัตถุ Date
+  const totalB = carin - carout;
+  const queryB = `INSERT INTO public."projectB" ("timeB", "carinB", "caroutB", "totalB") VALUES (localtimestamp, $1, $2, $3)`;
+  return db.none(queryB, [carin, carout, totalB])
+  .then(() => {
+      console.log('Data received:', { carin, carout });
+      return res.status(201).json();
+    })
+    .catch((error) => {
+      console.log(error);
+      return res.status(500).json({ error: "Failed to insert data into database" });
+    });
+});
 
-app.get('/api/data', (req, res) => {
-  sendData()
+// สร้าง API endpoint สำหรับรับข้อมูล
+app.get('/api/dataA', (req, res) => {
+  sendDataAPI()
       .then((data) => {
           res.json(data);
       })
@@ -54,7 +62,16 @@ app.get('/api/data', (req, res) => {
           res.status(500).json({ error: 'Internal server error' });
       });
 });
-
+app.get('/api/dataB', (req, res) => {
+  sendDataBAPI()
+      .then((data) => {
+          res.json(data);
+      })
+      .catch((error) => {
+          console.error(error);
+          res.status(500).json({ error: 'Internal server error' });
+      });
+});
 
 // Start server
 const PORT = process.env.PORT || 5000;

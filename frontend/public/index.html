@@ -55,10 +55,9 @@
       <tbody id="tableBody">
       </tbody>
   </table>
-
   <script>
-    // เรียกใช้งาน REST API เพื่อรับข้อมูล
-    fetch('/api/data')
+    function fetchData() {
+      fetch('/api/data')
       .then(response => response.json())
       .then(data => {
         const tableBody = document.getElementById('tableBody');
@@ -86,6 +85,11 @@
       .catch(error => {
         console.error('Error fetching data:', error);
       });
+    }
+
+
+
+    setInterval(fetchData, 500);
   </script>
 </body>
 </html>
